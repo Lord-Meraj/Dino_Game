@@ -17,11 +17,28 @@ class Dino:
         self.x = 10
         self.y = 80
         self.texture_num = 0
+        self.dy = 3
+        self.gravity = 1.2
+        self.onground = True
+        self.jumping = False
+        self.jump_stop = 10
+        self.falling = False
+        self.fall_stop = self.y
         self.set_texture()
         self.show()
 
     def update(self, loops):
-        if loops % 4 == 0:
+        if self.jumping:
+            self.y -= self.dy
+            if self.y <= self.jump_stop:
+                self.fall()
+
+        elif self.falling:
+            self.y += self.gravity * self.dy
+            if self.y >= self.fall_stop:
+                self.stop()
+
+        elif self.onground and loops % 4 == 0:
             self.texture_num = (self.texture_num + 1) % 3
             self.set_texture()
 
@@ -32,6 +49,18 @@ class Dino:
         path = os.path.join(f"assets/image/dino{self.texture_num}.png")
         self.texture = pygame.image.load(path)
         self.texture = pygame.transform.scale(self.texture, (self.width, self.height))
+
+    def jump(self):
+        self.jumping = True
+        self.onground = False
+
+    def fall(self):
+        self.jumping = False
+        self.falling = True
+
+    def stop(self):
+        self.falling = False
+        self.onground = True
 
 
 class BG:
@@ -88,6 +117,11 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    if dino.onground:
+                        dino.jump()
 
         clock.tick(80)
         pygame.display.update()
