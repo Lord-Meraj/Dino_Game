@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import pygame
 
@@ -8,6 +9,29 @@ HEIGHT = 150
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Dino")
+
+
+class BG:
+    def __init__(self, x):
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.x = x
+        self.y = 0
+        self.set_texture()
+        self.show()
+
+    def update(self, dx):
+        self.x += dx
+        if self.x <= -WIDTH:
+            self.x = WIDTH
+
+    def show(self):
+        screen.blit(self.texture, (self.x, self.y))
+
+    def set_texture(self):
+        path = os.path.join("assets/image/bg.png")
+        self.texture = pygame.image.load(path)
+        self.texture = pygame.transform.scale(self.texture, (self.width, self.height))
 
 
 class Dino:
@@ -63,25 +87,23 @@ class Dino:
         self.onground = True
 
 
-class BG:
+class Cactus:
     def __init__(self, x):
-        self.width = WIDTH
-        self.height = HEIGHT
+        self.width = 34
+        self.height = 44
         self.x = x
-        self.y = 0
+        self.y = 80
         self.set_texture()
         self.show()
 
     def update(self, dx):
         self.x += dx
-        if self.x <= -WIDTH:
-            self.x = WIDTH
 
     def show(self):
         screen.blit(self.texture, (self.x, self.y))
 
     def set_texture(self):
-        path = os.path.join("assets/image/bg.png")
+        path = os.path.join(f"assets/image/cactus.png")
         self.texture = pygame.image.load(path)
         self.texture = pygame.transform.scale(self.texture, (self.width, self.height))
 
@@ -90,7 +112,21 @@ class Game:
     def __init__(self):
         self.bg = [BG(x=0), BG(x=WIDTH)]
         self.dino = Dino()
+        self.obstacles = []
         self.speed = 3
+
+    def tospawn(self, loops):
+        return loops % 20 == 0
+
+    def spawn_cactus(self):
+        if len(self.obstacles) > 0:
+            pre_cactus = self.obstacles[-1]
+            x = random.randint(pre_cactus.x + self.dino.width + 84, WIDTH + pre_cactus.x + self.dino.width + 84)
+        else:
+            x = random.randint(WIDTH + 100, 1000)
+
+        cactus = Cactus(x)
+        self.obstacles.append(cactus)
 
 
 def main():
@@ -112,6 +148,15 @@ def main():
         # Dino
         dino.update(looops)
         dino.show()
+
+        # Cactus
+
+        if game.tospawn(looops):
+            game.spawn_cactus()
+
+        for cactus in game.obstacles:
+            cactus.update(-game.speed)
+            cactus.show()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
